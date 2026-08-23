@@ -33,15 +33,17 @@ pengguna tidak perlu mengatur parameter inferensi secara manual.
 
 ## Menjalankan Secara Lokal
 
-1. Pastikan Python 3.11 terpasang.
+1. Pastikan Python 3.11 atau yang lebih baru terpasang (3.11+).
 2. Pasang dependensi:
 
    ```bash
    pip install -r requirements.txt
    ```
 
-   Untuk lingkungan lokal dengan GPU NVIDIA, paket `torch` dapat diganti
-   dengan versi CUDA sesuai kebutuhan.
+   `requirements.txt` memakai build `torch` CPU agar ringan saat
+   dideploy ke Streamlit Community Cloud. Untuk lingkungan lokal
+   dengan GPU NVIDIA, paket `torch` dapat diganti dengan versi CUDA
+   sesuai kebutuhan.
 
 3. Jalankan aplikasi:
 

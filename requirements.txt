@@ -1,14 +1,17 @@
 --extra-index-url https://download.pytorch.org/whl/cpu
 
-# PyTorch CPU-only build (wheel CUDA ±2 GB tidak diperlukan untuk deploy ini)
-torch==2.7.1+cpu
-torchvision==0.22.1+cpu
+# PyTorch build CPU-only (wheel CUDA ~2.5 GB tidak diperlukan).
+# torch 2.9.1+cpu adalah versi pertama yang menyediakan wheel untuk
+# Python 3.14 (versi yang saat ini dipakai Streamlit Community Cloud).
+torch==2.9.1+cpu
+torchvision==0.24.1+cpu
 
 streamlit==1.62.0
 streamlit-webrtc==0.77.0
-av==17.1.0
+av==16.1.0
 ultralytics==8.3.166
-opencv-python-headless==4.11.0.86
-numpy==2.2.6
-pandas==2.3.1
+opencv-python==4.11.0.86
+numpy==2.3.5
+pandas==2.3.3
 pillow==11.3.0
+scipy==1.18.1
