@@ -11,7 +11,7 @@ import pandas as pd
 import streamlit as st
 import torch
 from PIL import ExifTags, Image
-from streamlit_webrtc import RTCConfiguration, WebRtcMode, webrtc_streamer
+from streamlit_webrtc import WebRtcMode, webrtc_streamer
 from ultralytics import YOLO
 
 st.set_page_config(
@@ -379,16 +379,49 @@ def process_image(image_bytes, source_label, conf, imgsz):
 
 
 # =========================
+# KONFIGURASI KONEKSI WEBRTC (STUN + TURN OPSIONAL)
+# =========================
+def build_ice_servers():
+    """Susun daftar server ICE untuk WebRTC.
+
+    STUN selalu dipakai. TURN ditambahkan otomatis jika kredensialnya
+    tersedia di Streamlit Secrets (TURN_URL, TURN_USERNAME, TURN_PASSWORD).
+    TURN dibutuhkan pada jaringan dengan symmetric NAT (umum di Wi-Fi
+    kampus/kantor) agar video dapat tersambung.
+    """
+    servers = [
+        {
+            "urls": [
+                "stun:stun.l.google.com:19302",
+                "stun:stun1.l.google.com:19302",
+            ]
+        }
+    ]
+    try:
+        turn_url = st.secrets["TURN_URL"]
+        turn_username = st.secrets["TURN_USERNAME"]
+        turn_password = st.secrets["TURN_PASSWORD"]
+    except Exception:
+        return servers
+    turn_urls = [u.strip() for u in str(turn_url).split(",") if u.strip()]
+    if turn_urls and turn_username and turn_password:
+        servers.append(
+            {
+                "urls": turn_urls,
+                "username": str(turn_username),
+                "credential": str(turn_password),
+            }
+        )
+    return servers
+
+
+ICE_SERVERS = build_ice_servers()
+TURN_ENABLED = len(ICE_SERVERS) > 1
+
+
+# =========================
 # DETEKSI REAL-TIME WEBRTC (512 px, NON-BLOCKING)
 # =========================
-RTC_CONFIGURATION = RTCConfiguration(
-    {
-        "iceServers": [
-            {"urls": ["stun:stun.l.google.com:19302"]},
-            {"urls": ["stun:stun1.l.google.com:19302"]}
-        ]
-    }
-)
 
 
 def create_video_frame_callback(conf, target_inference_fps):
@@ -559,16 +592,7 @@ def show_realtime_detection(conf, target_inference_fps):
             },
             "audio": False,
         },
-        rtc_configuration={
-            "iceServers": [
-                {
-                    "urls": [
-                        "stun:stun.l.google.com:19302",
-                        "stun:stun1.l.google.com:19302",
-                    ]
-                }
-            ]
-        },
+        rtc_configuration={"iceServers": ICE_SERVERS},
         async_processing=False,
     )
 
@@ -576,6 +600,12 @@ def show_realtime_detection(conf, target_inference_fps):
         st.success("Kamera aktif dan deteksi real-time sedang berjalan.")
     else:
         st.info("Kamera belum aktif. Tekan **START** lalu izinkan akses kamera.")
+
+    if not TURN_ENABLED:
+        st.caption(
+            "Koneksi memakai STUN saja. Jika video tidak tersambung di "
+            "jaringan tertentu, server TURN perlu ditambahkan lewat Secrets."
+        )
 
 
 # =========================
